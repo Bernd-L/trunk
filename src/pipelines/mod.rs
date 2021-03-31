@@ -1,5 +1,5 @@
-mod copydir;
-mod copyfile;
+mod copy_dir;
+mod copy_file;
 mod css;
 mod html;
 mod icon;
@@ -20,8 +20,8 @@ use futures::channel::mpsc::Sender;
 use nipper::Document;
 
 use crate::config::RtcBuild;
-use crate::pipelines::copydir::{CopyDir, CopyDirOutput};
-use crate::pipelines::copyfile::{CopyFile, CopyFileOutput};
+use crate::pipelines::copy_dir::{CopyDir, CopyDirOutput};
+use crate::pipelines::copy_file::{CopyFile, CopyFileOutput};
 use crate::pipelines::css::{Css, CssOutput};
 use crate::pipelines::icon::{Icon, IconOutput};
 use crate::pipelines::inline::{Inline, InlineOutput};
