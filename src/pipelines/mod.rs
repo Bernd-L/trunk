@@ -31,6 +31,7 @@ use crate::pipelines::sass::{Sass, SassOutput};
 
 pub use html::HtmlPipeline;
 
+const ATTR_INLINE: &str = "data-inline";
 const ATTR_HREF: &str = "href";
 const ATTR_TYPE: &str = "type";
 const ATTR_REL: &str = "rel";
