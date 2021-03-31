@@ -3,15 +3,19 @@
 
 # changelog
 
-This changelog follows the patterns described here: https://keepachangelog.com/en/1.0.0/.
+This changelog follows the patterns described here: <https://keepachangelog.com/en/1.0.0/>.
 
 Subheadings to categorize changes are `added, changed, deprecated, removed, fixed, security`.
 
-## Unreleased
+## 0.11.0
+
+### added
+
+- Closed [#158](https://github.com/thedodd/trunk/issues/158): Support for inlining SASS/SCSS after compilation using the new `data-inline` attribute
 
 ### fixed
 
-- Fixed [#148](https://github.com/thedodd/trunk/issues/148): any changes detected under a `.git` path are now being ignored by default.
+- Fixed [#148](https://github.com/thedodd/trunk/issues/148): Any changes detected under a `.git` path are now being ignored by default.
 
 ## 0.10.0
 
@@ -29,7 +33,7 @@ Subheadings to categorize changes are `added, changed, deprecated, removed, fixe
 
 ### fixed
 
-- Fixed a bug releated to the watch system, which would cause build loops if there was an error on the initial build.
+- Fixed a bug related to the watch system, which would cause build loops if there was an error on the initial build.
 
 ## 0.9.0
 
