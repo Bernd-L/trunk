@@ -5,8 +5,8 @@ authors = ["Anthony Dodd <dodd.anthonyjosiah@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-console_error_panic_hook = "0.1.6"
+console_error_panic_hook = "0.1.6" 
 wasm-bindgen = "=0.2.70" # This is pinned primarily for CI stability.
-wee_alloc = "0.4.5"
-ybc = "0.1.4"
+wee_alloc = "0.4.5" 
+ybc = "0.1.4" 
 yew = "0.17.3"

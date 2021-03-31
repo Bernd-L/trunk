@@ -4,16 +4,18 @@ use std::path::PathBuf;
 use std::str::FromStr;
 use std::sync::Arc;
 
-use anyhow::{bail, Context, Result};
-use async_std::task::{spawn, JoinHandle};
+use anyhow::{anyhow, bail, Context, Result};
+use async_std::task::{spawn, spawn_blocking, JoinHandle};
 use nipper::Document;
 
-use super::{AssetFile, LinkAttrs, TrunkLinkPipelineOutput, ATTR_HREF, ATTR_TYPE};
+use super::{super::config::RtcBuild, AssetFile, LinkAttrs, TrunkLinkPipelineOutput, ATTR_HREF, ATTR_TYPE};
 
 /// An Inline asset pipeline.
 pub struct Inline {
     /// The ID of this pipeline's source HTML element.
     id: usize,
+    /// Runtime build config.
+    cfg: Arc<RtcBuild>,
     /// The asset file being processed.
     asset: AssetFile,
     /// The type of the asset file that determines how the content of the file
@@ -23,8 +25,9 @@ pub struct Inline {
 
 impl Inline {
     pub const TYPE_INLINE: &'static str = "inline";
+    pub const TYPE_INLINE_SCSS: &'static str = "inline-scss";
 
-    pub async fn new(html_dir: Arc<PathBuf>, attrs: LinkAttrs, id: usize) -> Result<Self> {
+    pub async fn new(cfg: Arc<RtcBuild>, html_dir: Arc<PathBuf>, attrs: LinkAttrs, id: usize) -> Result<Self> {
         let href_attr = attrs
             .get(ATTR_HREF)
             .context(r#"required attr `href` missing for <link data-trunk rel="inline" .../> element"#)?;
@@ -35,7 +38,12 @@ impl Inline {
         let asset = AssetFile::new(&html_dir, path).await?;
         let content_type = ContentType::from_attr_or_ext(attrs.get(ATTR_TYPE), &asset.ext)?;
 
-        Ok(Self { id, asset, content_type })
+        Ok(Self {
+            id,
+            cfg,
+            asset,
+            content_type,
+        })
     }
 
     /// Spawn the pipeline for this asset type.
@@ -49,8 +57,27 @@ impl Inline {
     async fn run(self) -> Result<TrunkLinkPipelineOutput> {
         let rel_path = crate::common::strip_prefix(&self.asset.path);
         tracing::info!(path = ?rel_path, "reading file content");
-        let content = self.asset.read_to_string().await?;
+        let mut content = self.asset.read_to_string().await?;
         tracing::info!(path = ?rel_path, "finished reading file content");
+
+        // Compile SCSS if necessary
+        if let ContentType::Scss = self.content_type {
+            // Assume default options for the SASS compiler unless specified otherwise
+            let mut options = sass_rs::Options::default();
+            if self.cfg.release {
+                options.output_style = sass_rs::OutputStyle::Compressed;
+            }
+
+            // Log SASS compilation
+            tracing::info!(path = ?rel_path, "compiling inline sass/scss");
+
+            // Compile the SCSS
+            content = spawn_blocking(move || sass_rs::compile_string(&content, options)).await.map_err(|err| {
+                eprintln!("{}", err);
+                anyhow!("error compiling inline sass/scss for {:?}", &self.asset.path)
+            })?;
+        }
+
         Ok(TrunkLinkPipelineOutput::Inline(InlineOutput {
             id: self.id,
             content,
@@ -67,6 +94,8 @@ pub enum ContentType {
     Css,
     /// JS is wrapped into `script` tags.
     Js,
+    /// SCSS needs to be compiled before being wrapped into `style` tags.
+    Scss,
 }
 
 impl ContentType {
@@ -84,9 +113,10 @@ impl FromStr for ContentType {
     type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s {
+        match dbg!(s) {
             "html" => Ok(Self::Html),
             "css" => Ok(Self::Css),
+            "scss" => Ok(Self::Scss),
             "js" => Ok(Self::Js),
             s => bail!(
                 r#"unknown `type="{}"` value for <link data-trunk rel="inline" .../> attr; please ensure the value is lowercase and is a supported content type"#,
@@ -110,7 +140,7 @@ impl InlineOutput {
     pub async fn finalize(self, dom: &mut Document) -> Result<()> {
         let html = match self.content_type {
             ContentType::Html => self.content,
-            ContentType::Css => format!("<style>{}</style>", self.content),
+            ContentType::Css | ContentType::Scss => format!("<style>{}</style>", self.content),
             ContentType::Js => format!("<script>{}</script>", self.content),
         };
 
