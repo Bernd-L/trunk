@@ -111,7 +111,7 @@ pub enum CssRef {
 
 impl SassOutput {
     pub async fn finalize(self, dom: &mut Document) -> Result<()> {
-        dom.select(&super::trunk_id_selector(self.id)).replace_with_html(match self.css_ref {
+        let html = match self.css_ref {
             // Insert the inlined CSS into a <style>` tag
             CssRef::Inline(css) => format!(r#"<style>{}</style>"#, css),
 
@@ -123,7 +123,9 @@ impl SassOutput {
                     file = file.file_name
                 )
             }
-        });
+        };
+
+        dom.select(&super::trunk_id_selector(self.id)).replace_with_html(html);
 
         // Return Ok
         Ok(())
