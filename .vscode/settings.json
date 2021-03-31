@@ -7,6 +7,7 @@
     "WASM",
     "binaryen",
     "clippy",
+    "dnaka",
     "finalizer",
     "opt's",
     "seahash",
