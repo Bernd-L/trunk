@@ -15,7 +15,7 @@ The Trunk community has been discussing plans to introduce a plugin system for T
 - Proprietary integration. Perhaps folks have some Trunk pipelines they would like to build, but they are not able to open source the code. This would provide for such cases.
 - Perhaps folks don't want to take the time to contribute 😬. The maintainers are too mean, too snarky, they always ask me to change things ... who knows?
 - Perhaps the use case is too niche, and the Trunk maintainers don't think it should be in the code base.
-- A big one is maintenance. As Trunk grows and new use cases inevitibly emerge, that will be more and more code to maintain, which may slow overall progress of core Trunk development.
+- A big one is maintenance. As Trunk grows and new use cases inevitably emerge, that will be more and more code to maintain, which may slow overall progress of core Trunk development.
 
 # Trunk Internals (abridged)
 

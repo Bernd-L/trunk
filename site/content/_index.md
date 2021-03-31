@@ -27,13 +27,13 @@ cargo install --locked trunk
 
 Next, we will need to install `wasm-bindgen-cli`. In the future Trunk will handle this for you.
 
-```
+```zsh
 cargo install wasm-bindgen-cli
 ```
 
 If using wasm-opt, we will need to install `wasm-opt` which is part of `binaryen`. On MacOS we can install it with Homebrew:
 
-```sh
+```zsh
 brew install binaryen
 ```
 
