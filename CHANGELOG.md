@@ -7,21 +7,19 @@ This changelog follows the patterns described here: <https://keepachangelog.com/
 
 Subheadings to categorize changes are `added, changed, deprecated, removed, fixed, security`.
 
-## 0.11.0
+## 0.10.0
 
 ### added
 
 - Closed [#158](https://github.com/thedodd/trunk/issues/158): Support for inlining SASS/SCSS after compilation using the new `data-inline` attribute
 
-### fixed
-
-- Fixed [#148](https://github.com/thedodd/trunk/issues/148): Any changes detected under a `.git` path are now being ignored by default.
-
-## 0.10.0
-
 ### changed
 
 - Completely removed `indicatif` from the code base, and now we are using the `tracing` crate. This has greatly simplified the code base. Only downside ... no more progress spinner. Per a fair bit of demand however, cargo output and output from other subprocess calls are now piped directly to stdout/stderr for better visibility into what is happening behind the scenes.
+
+### fixed
+
+- Fixed [#148](https://github.com/thedodd/trunk/issues/148): Any changes detected under a `.git` path are now being ignored by default.
 
 ## 0.9.2
 
