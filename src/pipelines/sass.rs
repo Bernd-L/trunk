@@ -126,8 +126,6 @@ impl SassOutput {
         };
 
         dom.select(&super::trunk_id_selector(self.id)).replace_with_html(html);
-
-        // Return Ok
         Ok(())
     }
 }
