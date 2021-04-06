@@ -20,7 +20,7 @@ pub struct Sass {
     cfg: Arc<RtcBuild>,
     /// The asset file being processed.
     asset: AssetFile,
-    /// If the specified SASS/SCSS file should be inlined
+    /// If the specified SASS/SCSS file should be inlined.
     use_inline: bool,
 }
 
