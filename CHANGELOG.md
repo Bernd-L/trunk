@@ -5,6 +5,9 @@ This changelog follows the patterns described here: https://keepachangelog.com/e
 Subheadings to categorize changes are `added, changed, deprecated, removed, fixed, security`.
 
 ## Unreleased
+### added
+- Closed [#158](https://github.com/thedodd/trunk/issues/158): Support for inlining SASS/SCSS after compilation using the new `data-inline` attribute
+
 ### fixed
 - Fixed [#148](https://github.com/thedodd/trunk/issues/148): any changes detected under a `.git` path are now being ignored by default.
 - Fixed [#163](https://github.com/thedodd/trunk/issues/163): allow using `copy-file` assets with files without a file extension.
