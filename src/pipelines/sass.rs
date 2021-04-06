@@ -32,7 +32,7 @@ impl Sass {
         // Build the path to the target asset.
         let href_attr = attrs
             .get(ATTR_HREF)
-            .context(r#"required attr `href` missing for <link data-trunk [data-inline] rel="sass|scss" .../> element"#)?;
+            .context(r#"required attr `href` missing for <link data-trunk rel="sass|scss" .../> element"#)?;
         let mut path = PathBuf::new();
         path.extend(href_attr.split('/'));
         let asset = AssetFile::new(&html_dir, path).await?;
@@ -76,10 +76,10 @@ impl Sass {
             let file_name = format!("{}-{:x}.css", &self.asset.file_stem.to_string_lossy(), hash);
             let file_path = self.cfg.staging_dist.join(&file_name);
 
-            // Write the generated CSS to the filesystem
+            // Write the generated CSS to the filesystem.
             fs::write(&file_path, css).await.context("error writing SASS pipeline output")?;
 
-            // Generate a hashed reference to the new CSS file
+            // Generate a hashed reference to the new CSS file.
             CssRef::File(HashedFileOutput { hash, file_path, file_name })
         };
 
@@ -103,9 +103,10 @@ pub struct SassOutput {
 }
 
 /// The resulting CSS of the SASS/SCSS compilation.
-/// Either a hashed file reference (default) or a String (for `data-inline`)
 pub enum CssRef {
+    /// CSS to be inlined (for `data-inline`)
     Inline(String),
+    /// A hashed file reference to a CSS file (default)
     File(HashedFileOutput),
 }
 
@@ -114,7 +115,6 @@ impl SassOutput {
         let html = match self.css_ref {
             // Insert the inlined CSS into a <style>` tag
             CssRef::Inline(css) => format!(r#"<style>{}</style>"#, css),
-
             // Link to the CSS file
             CssRef::File(file) => {
                 format!(
