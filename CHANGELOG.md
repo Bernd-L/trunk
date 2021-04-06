@@ -22,7 +22,7 @@ Subheadings to categorize changes are `added, changed, deprecated, removed, fixe
 
 ## 0.9.1
 ### fixed
-- Fixed a bug releated to the watch system, which would cause build loops if there was an error on the initial build.
+- Fixed a bug related to the watch system, which would cause build loops if there was an error on the initial build.
 
 ## 0.9.0
 ### added
@@ -34,7 +34,7 @@ Added support for proxying WebSockets. This was a long-standing feature request.
 
 ### fixed
 - Closed [#81](https://github.com/thedodd/trunk/issues/81): this is no longer needed as we now have support for WebSockets. HTTP2 is still outstanding, but that will not be a blocker for use from the web.
-- Closed [#95](https://github.com/thedodd/trunk/issues/95): fixed via a few small changes to precendce in routing.
+- Closed [#95](https://github.com/thedodd/trunk/issues/95): fixed via a few small changes to precedence in routing.
 - Closed [#53](https://github.com/thedodd/trunk/issues/53): we've now implemented support for proxying WebSockets.
 
 ## 0.8.3
