@@ -85,7 +85,7 @@ impl FromStr for ContentType {
     type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match dbg!(s) {
+        match s {
             "html" => Ok(Self::Html),
             "css" => Ok(Self::Css),
             "js" => Ok(Self::Js),
