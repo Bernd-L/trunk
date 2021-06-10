@@ -23,8 +23,8 @@ pub struct RustApp {
     id: Option<usize>,
     /// Runtime config.
     cfg: Arc<RtcBuild>,
-    /// Space or comma separated list of cargo features to activate.
-    cargo_features: Option<String>,
+    /// The configuration of the features passed to cargo.
+    cargo_features: Features,
     /// All metadata associated with the target Cargo project.
     manifest: CargoMetadata,
     /// An optional channel to be used to communicate paths to ignore back to the watcher.
@@ -40,6 +40,17 @@ pub struct RustApp {
     /// An optional optimization setting that enables wasm-opt. Can be nothing, `0` (default), `1`,
     /// `2`, `3`, `4`, `s or `z`. Using `0` disables wasm-opt completely.
     wasm_opt: WasmOptLevel,
+}
+
+pub enum Features {
+    /// If the cargo features were not specified.
+    Unspecified,
+    /// Use cargo's `--all-features` flag during compilation.
+    All,
+    /// Space or comma separated list of cargo features to activate.
+    Explicit(String),
+    /// Use cargo's `--no-default-features` flag during compilation.
+    NoDefault,
 }
 
 impl RustApp {
@@ -62,12 +73,21 @@ impl RustApp {
             })
             .unwrap_or_else(|| html_dir.join("Cargo.toml"));
         let bin = attrs.get("data-bin").map(|val| val.to_string());
-        let cargo_features = attrs.get("data-cargo-features").map(|val| val.to_string());
         let keep_debug = attrs.contains_key("data-keep-debug");
         let no_demangle = attrs.contains_key("data-no-demangle");
         let wasm_opt = attrs.get("data-wasm-opt").map(|val| val.parse()).transpose()?.unwrap_or_default();
         let manifest = CargoMetadata::new(&manifest_href).await?;
         let id = Some(id);
+
+        let cargo_features = if let Some(explicit_list) = attrs.get("data-cargo-features").map(|val| val.to_string()) {
+            Features::Explicit(explicit_list)
+        } else if attrs.get("data-cargo-no-default-features").is_some() {
+            Features::NoDefault
+        } else if attrs.get("data-cargo-all-features").is_some() {
+            Features::All
+        } else {
+            Features::Unspecified
+        };
 
         Ok(Self {
             id,
@@ -88,7 +108,7 @@ impl RustApp {
         Ok(Self {
             id: None,
             cfg,
-            cargo_features: None,
+            cargo_features: Features::Unspecified,
             manifest,
             ignore_chan,
             bin: None,
@@ -130,9 +150,14 @@ impl RustApp {
             args.push("--bin");
             args.push(bin);
         }
-        if let Some(cargo_features) = &self.cargo_features {
-            args.push("--features");
-            args.push(cargo_features);
+        match &self.cargo_features {
+            Features::Unspecified => (),
+            Features::All => args.push("--all-features"),
+            Features::NoDefault => args.push("--no-default-features"),
+            Features::Explicit(cargo_features) => {
+                args.push("--features");
+                args.push(cargo_features);
+            }
         }
 
         let build_res = run_command("cargo", &args).await.context("error during cargo build execution");
