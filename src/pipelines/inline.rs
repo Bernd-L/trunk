@@ -33,7 +33,7 @@ impl Inline {
         path.extend(href_attr.split('/'));
 
         let asset = AssetFile::new(&html_dir, path).await?;
-        let content_type = ContentType::from_attr_or_ext(attrs.get(ATTR_TYPE), &asset.ext)?;
+        let content_type = ContentType::from_attr_or_ext(attrs.get(ATTR_TYPE), asset.ext.as_deref())?;
 
         Ok(Self { id, asset, content_type })
     }
@@ -51,6 +51,7 @@ impl Inline {
         tracing::info!(path = ?rel_path, "reading file content");
         let content = self.asset.read_to_string().await?;
         tracing::info!(path = ?rel_path, "finished reading file content");
+
         Ok(TrunkLinkPipelineOutput::Inline(InlineOutput {
             id: self.id,
             content,
@@ -72,10 +73,15 @@ pub enum ContentType {
 impl ContentType {
     /// Either tries to parse the provided attribute to a ContentType
     /// or tries to infer the ContentType from the AssetFile extension.
-    fn from_attr_or_ext(attr: Option<impl AsRef<str>>, ext: &str) -> Result<Self> {
+    fn from_attr_or_ext(attr: Option<impl AsRef<str>>, ext: Option<&str>) -> Result<Self> {
         match attr {
             Some(attr) => Self::from_str(attr.as_ref()),
-            None => Self::from_str(ext),
+            None => match ext {
+                Some(ext) => Self::from_str(ext),
+                None => bail!(
+                    r#"unknown type value for <link data-trunk rel="inline" .../> attr; please ensure the value is lowercase and is a supported content type"#,
+                ),
+            },
         }
     }
 }
@@ -110,8 +116,8 @@ impl InlineOutput {
     pub async fn finalize(self, dom: &mut Document) -> Result<()> {
         let html = match self.content_type {
             ContentType::Html => self.content,
-            ContentType::Css => format!("<style>{}</style>", self.content),
-            ContentType::Js => format!("<script>{}</script>", self.content),
+            ContentType::Css => format!(r#"<style type="text/css">{}</style>"#, self.content),
+            ContentType::Js => format!(r#"<script>{}</script>"#, self.content),
         };
 
         dom.select(&super::trunk_id_selector(self.id)).replace_with_html(html);

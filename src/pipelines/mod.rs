@@ -1,5 +1,5 @@
-mod copydir;
-mod copyfile;
+mod copy_dir;
+mod copy_file;
 mod css;
 mod html;
 mod icon;
@@ -20,8 +20,8 @@ use futures::channel::mpsc::Sender;
 use nipper::Document;
 
 use crate::config::RtcBuild;
-use crate::pipelines::copydir::{CopyDir, CopyDirOutput};
-use crate::pipelines::copyfile::{CopyFile, CopyFileOutput};
+use crate::pipelines::copy_dir::{CopyDir, CopyDirOutput};
+use crate::pipelines::copy_file::{CopyFile, CopyFileOutput};
 use crate::pipelines::css::{Css, CssOutput};
 use crate::pipelines::icon::{Icon, IconOutput};
 use crate::pipelines::inline::{Inline, InlineOutput};
@@ -31,6 +31,7 @@ use crate::pipelines::sass::{Sass, SassOutput};
 
 pub use html::HtmlPipeline;
 
+const ATTR_INLINE: &str = "data-inline";
 const ATTR_HREF: &str = "href";
 const ATTR_TYPE: &str = "type";
 const ATTR_REL: &str = "rel";
@@ -134,7 +135,7 @@ pub struct AssetFile {
     /// The file stem of the asset file.
     pub file_stem: OsString,
     /// The extension of the file.
-    pub ext: String,
+    pub ext: Option<String>,
 }
 
 impl AssetFile {
@@ -167,10 +168,7 @@ impl AssetFile {
             Some(file_stem) => file_stem.to_owned(),
             None => bail!("asset has no file name stem {:?}", &path),
         };
-        let ext = match path.extension() {
-            Some(ext) => ext.to_string_lossy().to_lowercase(),
-            None => bail!("asset has no file extension {:?}", &path),
-        };
+        let ext = path.extension().map(|ext| ext.to_owned().to_string_lossy().to_string());
         Ok(Self {
             path: path.into(),
             file_name,
@@ -199,7 +197,12 @@ impl AssetFile {
             .await
             .with_context(|| format!("error reading file for copying {:?}", &self.path))?;
         let hash = seahash::hash(bytes.as_ref());
-        let file_name = format!("{}-{:x}.{}", &self.file_stem.to_string_lossy(), hash, &self.ext);
+        let file_name = format!(
+            "{}-{:x}.{}",
+            &self.file_stem.to_string_lossy(),
+            hash,
+            &self.ext.as_deref().unwrap_or_default()
+        );
 
         let file_path = to_dir.join(&file_name);
         fs::write(&file_path, bytes)
