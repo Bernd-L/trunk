@@ -15,7 +15,7 @@ use nipper::Document;
 use super::{LinkAttrs, TrunkLinkPipelineOutput};
 use super::{ATTR_HREF, SNIPPETS_DIR};
 use crate::common::{copy_dir_recursive, path_exists};
-use crate::config::{CargoMetadata, RtcBuild};
+use crate::config::{CargoMetadata, Features, RtcBuild};
 
 /// A Rust application pipeline.
 pub struct RustApp {
@@ -40,17 +40,6 @@ pub struct RustApp {
     /// An optional optimization setting that enables wasm-opt. Can be nothing, `0` (default), `1`,
     /// `2`, `3`, `4`, `s or `z`. Using `0` disables wasm-opt completely.
     wasm_opt: WasmOptLevel,
-}
-
-pub enum Features {
-    /// If the cargo features were not specified.
-    Unspecified,
-    /// Use cargo's `--all-features` flag during compilation.
-    All,
-    /// Space or comma separated list of cargo features to activate.
-    Explicit(String),
-    /// Use cargo's `--no-default-features` flag during compilation.
-    NoDefault,
 }
 
 impl RustApp {
@@ -107,8 +96,8 @@ impl RustApp {
         let manifest = CargoMetadata::new(&path).await?;
         Ok(Self {
             id: None,
+            cargo_features: cfg.cargo_features.clone(),
             cfg,
-            cargo_features: Features::Unspecified,
             manifest,
             ignore_chan,
             bin: None,

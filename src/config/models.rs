@@ -25,6 +25,17 @@ pub struct ConfigOptsBuild {
     /// The public URL from which assets are to be served [default: /]
     #[structopt(long, parse(from_str=parse_public_url))]
     pub public_url: Option<String>,
+    /// Build without default features [default: false]
+    #[structopt(long)]
+    #[serde(default)]
+    pub no_default_features: bool,
+    /// Build with all features [default: false]
+    #[structopt(long)]
+    #[serde(default)]
+    pub all_features: bool,
+    /// The public URL from which assets are to be served [default: /]
+    #[structopt(long)]
+    pub features: Option<String>,
 }
 
 /// Config options for the watch system.
@@ -157,6 +168,9 @@ impl ConfigOpts {
             release: cli.release,
             dist: cli.dist,
             public_url: cli.public_url,
+            no_default_features: cli.no_default_features,
+            all_features: cli.all_features,
+            features: cli.features,
         };
         let cfg_build = ConfigOpts {
             build: Some(opts),

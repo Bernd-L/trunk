@@ -1,10 +1,23 @@
 use std::path::PathBuf;
 use std::sync::Arc;
 
-use anyhow::{anyhow, Context, Result};
+use anyhow::{anyhow, bail, Context, Result};
 use http_types::Url;
 
 use crate::config::{ConfigOptsBuild, ConfigOptsClean, ConfigOptsProxy, ConfigOptsServe, ConfigOptsWatch};
+
+/// Config options for the cargo build command
+#[derive(Clone, Debug)]
+pub enum Features {
+    /// If the cargo features were not specified.
+    Unspecified,
+    /// Use cargo's `--all-features` flag during compilation.
+    All,
+    /// Space or comma separated list of cargo features to activate.
+    Explicit(String),
+    /// Use cargo's `--no-default-features` flag during compilation.
+    NoDefault,
+}
 
 /// Runtime config for the build system.
 #[derive(Clone, Debug)]
@@ -21,6 +34,8 @@ pub struct RtcBuild {
     pub final_dist: PathBuf,
     /// The directory used to stage build artifacts during an active build.
     pub staging_dist: PathBuf,
+    /// The configuration of the features passed to cargo.
+    pub cargo_features: Features,
 }
 
 impl RtcBuild {
@@ -49,6 +64,22 @@ impl RtcBuild {
         let final_dist = final_dist.canonicalize().context("error taking canonical path to dist dir")?;
         let staging_dist = final_dist.join(super::STAGE_DIR);
 
+        // Highlander-rule: There can be only one (prohibits contradicting arguments):
+        let cargo_features = if (opts.all_features && opts.no_default_features)
+            || (opts.no_default_features && opts.features.is_some())
+            || (opts.all_features && opts.features.is_some())
+        {
+            bail!("Cannot combine two or more of: --no-default-features, --all-features, and --features")
+        } else if opts.all_features {
+            Features::All
+        } else if opts.no_default_features {
+            Features::NoDefault
+        } else if let Some(explicit_list) = opts.features {
+            Features::Explicit(explicit_list)
+        } else {
+            Features::Unspecified
+        };
+
         Ok(Self {
             target,
             target_parent,
@@ -56,6 +87,7 @@ impl RtcBuild {
             staging_dist,
             final_dist,
             public_url: opts.public_url.unwrap_or_else(|| "/".into()),
+            cargo_features,
         })
     }
 }
