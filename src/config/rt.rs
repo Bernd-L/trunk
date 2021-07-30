@@ -4,7 +4,7 @@ use std::sync::Arc;
 use anyhow::{anyhow, bail, Context, Result};
 use http_types::Url;
 
-use crate::config::{ConfigOptsBuild, ConfigOptsClean, ConfigOptsProxy, ConfigOptsServe, ConfigOptsWatch};
+use crate::config::{ConfigOptsBuild, ConfigOptsClean, ConfigOptsProxy, ConfigOptsServe, ConfigOptsTools, ConfigOptsWatch};
 
 /// Config options for the cargo build command
 #[derive(Clone, Debug)]
@@ -36,11 +36,13 @@ pub struct RtcBuild {
     pub staging_dist: PathBuf,
     /// The configuration of the features passed to cargo.
     pub cargo_features: Features,
+    /// Configuration for automatic application download.
+    pub tools: ConfigOptsTools,
 }
 
 impl RtcBuild {
     /// Construct a new instance.
-    pub(super) fn new(opts: ConfigOptsBuild) -> Result<Self> {
+    pub(super) fn new(opts: ConfigOptsBuild, tools: ConfigOptsTools) -> Result<Self> {
         // Get the canonical path to the target HTML file.
         let pre_target = opts.target.clone().unwrap_or_else(|| "index.html".into());
         let target = pre_target
@@ -61,7 +63,9 @@ impl RtcBuild {
         if !final_dist.exists() {
             std::fs::create_dir(&final_dist).with_context(|| format!("error creating final dist directory {:?}", &final_dist))?;
         }
-        let final_dist = final_dist.canonicalize().context("error taking canonical path to dist dir")?;
+        let final_dist = final_dist
+            .canonicalize()
+            .context("error taking canonical path to dist dir")?;
         let staging_dist = final_dist.join(super::STAGE_DIR);
 
         // Highlander-rule: There can be only one (prohibits contradicting arguments):
@@ -88,6 +92,7 @@ impl RtcBuild {
             final_dist,
             public_url: opts.public_url.unwrap_or_else(|| "/".into()),
             cargo_features,
+            tools,
         })
     }
 }
@@ -104,13 +109,15 @@ pub struct RtcWatch {
 }
 
 impl RtcWatch {
-    pub(super) fn new(build_opts: ConfigOptsBuild, opts: ConfigOptsWatch) -> Result<Self> {
-        let build = Arc::new(RtcBuild::new(build_opts)?);
+    pub(super) fn new(build_opts: ConfigOptsBuild, opts: ConfigOptsWatch, tools: ConfigOptsTools) -> Result<Self> {
+        let build = Arc::new(RtcBuild::new(build_opts, tools)?);
 
         // Take the canonical path of each of the specified watch targets.
         let mut paths = vec![];
         for path in opts.watch.unwrap_or_default() {
-            let canon_path = path.canonicalize().map_err(|_| anyhow!("invalid watch path provided: {:?}", path))?;
+            let canon_path = path
+                .canonicalize()
+                .map_err(|_| anyhow!("invalid watch path provided: {:?}", path))?;
             paths.push(canon_path);
         }
         // If no watch paths were provied, then we default to the target HTML's parent dir.
@@ -121,11 +128,15 @@ impl RtcWatch {
         // Take the canonical path of each of the specified ignore targets.
         let mut ignored_paths = match opts.ignore {
             None => vec![],
-            Some(paths) => paths.into_iter().try_fold(vec![], |mut acc, path| -> Result<Vec<PathBuf>> {
-                let canon_path = path.canonicalize().map_err(|_| anyhow!("invalid ignore path provided: {:?}", path))?;
-                acc.push(canon_path);
-                Ok(acc)
-            })?,
+            Some(paths) => paths
+                .into_iter()
+                .try_fold(vec![], |mut acc, path| -> Result<Vec<PathBuf>> {
+                    let canon_path = path
+                        .canonicalize()
+                        .map_err(|_| anyhow!("invalid ignore path provided: {:?}", path))?;
+                    acc.push(canon_path);
+                    Ok(acc)
+                })?,
         };
         // Ensure the final dist dir is always ignored.
         ignored_paths.push(build.final_dist.clone());
@@ -155,9 +166,10 @@ pub struct RtcServe {
 
 impl RtcServe {
     pub(super) fn new(
-        build_opts: ConfigOptsBuild, watch_opts: ConfigOptsWatch, opts: ConfigOptsServe, proxies: Option<Vec<ConfigOptsProxy>>,
+        build_opts: ConfigOptsBuild, watch_opts: ConfigOptsWatch, opts: ConfigOptsServe, tools: ConfigOptsTools,
+        proxies: Option<Vec<ConfigOptsProxy>>,
     ) -> Result<Self> {
-        let watch = Arc::new(RtcWatch::new(build_opts, watch_opts)?);
+        let watch = Arc::new(RtcWatch::new(build_opts, watch_opts, tools)?);
         Ok(Self {
             watch,
             port: opts.port.unwrap_or(8080),
