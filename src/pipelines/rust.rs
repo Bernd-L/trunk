@@ -7,7 +7,7 @@ use std::process::Stdio;
 use std::str::FromStr;
 use std::sync::Arc;
 
-use anyhow::{anyhow, bail, Context, Result};
+use anyhow::{anyhow, bail, ensure, Context, Result};
 use cargo_lock::Lockfile;
 use nipper::Document;
 use tokio::fs;
@@ -131,16 +131,23 @@ impl RustApp {
         let id = Some(id);
         let name = bin.clone().unwrap_or_else(|| manifest.package.name.clone());
 
-        let cargo_features = if let Some(explicit_list) =
-            attrs.get("data-cargo-features").map(|val| val.to_string())
-        {
-            Features::Explicit(explicit_list)
-        } else if attrs.get("data-cargo-no-default-features").is_some() {
-            Features::NoDefault
-        } else if attrs.get("data-cargo-all-features").is_some() {
+        let data_features = attrs.get("data-cargo-features").map(|val| val.to_string());
+        let data_all_features = attrs.get("data-cargo-all-features").is_some();
+        let data_no_default_features = attrs.get("data-cargo-no-default-features").is_some();
+
+        // Highlander-rule: There can be only one (prohibits contradicting arguments):
+        ensure!(
+            !(data_all_features && (data_no_default_features || data_features.is_some())),
+            "Cannot combine --all-features with --no-default-features and/or --features"
+        );
+
+        let cargo_features = if data_all_features {
             Features::All
         } else {
-            Features::Unspecified
+            Features::Custom {
+                features: data_features,
+                no_default_features: data_no_default_features,
+            }
         };
 
         Ok(Self {
@@ -220,13 +227,21 @@ impl RustApp {
             args.push("--bin");
             args.push(bin);
         }
+
         match &self.cargo_features {
-            Features::Unspecified => (),
             Features::All => args.push("--all-features"),
-            Features::NoDefault => args.push("--no-default-features"),
-            Features::Explicit(cargo_features) => {
-                args.push("--features");
-                args.push(cargo_features);
+            Features::Custom {
+                features,
+                no_default_features,
+            } => {
+                if *no_default_features {
+                    args.push("--no-default-features");
+                }
+
+                if let Some(cargo_features) = features {
+                    args.push("--features");
+                    args.push(cargo_features);
+                }
             }
         }
 
