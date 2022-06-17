@@ -103,10 +103,6 @@
                     <a class="subtext" href="https://trunkrs.dev/assets/#copy-dir"><small>- copy-dir</small></a>
                 </div>
                 
-                <div class="toc-item-child">
-                    <a class="subtext" href="https://trunkrs.dev/assets/#rust-worker"><small>- rust-worker</small></a>
-                </div>
-                
                 
                 
                 <div class="toc-item">
@@ -121,6 +117,26 @@
                 
                 <div class="toc-item">
                     <a class="subtext" href="https://trunkrs.dev/assets/#directives">Directives</a>
+                </div>
+                
+                
+                <div class="toc-item">
+                    <a class="subtext" href="https://trunkrs.dev/assets/#hooks">Hooks</a>
+                </div>
+                
+                
+                <div class="toc-item-child">
+                    <a class="subtext" href="https://trunkrs.dev/assets/#trunk-s-build-process"><small>- Trunk&#x27;s build process</small></a>
+                </div>
+                
+                <div class="toc-item-child">
+                    <a class="subtext" href="https://trunkrs.dev/assets/#hook-environment-execution"><small>- Hook Environment &amp; Execution</small></a>
+                </div>
+                
+                
+                
+                <div class="toc-item">
+                    <a class="subtext" href="https://trunkrs.dev/assets/#auto-reload">Auto-Reload</a>
                 </div>
                 
                 
@@ -141,16 +157,30 @@
 <p>This will typically look like: <code>&lt;link data-trunk rel=&quot;{type}&quot; href=&quot;{path}&quot; ..other options here.. /&gt;</code>. Each asset type described below specifies the required and optional attributes for its asset type. All <code>&lt;link data-trunk .../&gt;</code> HTML elements will be replaced with the output HTML of the associated pipeline.</p>
 <h1 id="asset-types">Asset Types</h1>
 <h2 id="rust">rust</h2>
-<p>✅ <code>rel=&quot;rust&quot;</code>: Trunk will compile the specified Cargo project as the main WASM application. This is optional. If not specified, Trunk will look for a <code>Cargo.toml</code> in the parent directory of the source HTML file.</p>
+<p>✅ <code>rel=&quot;rust&quot;</code>: Trunk will compile the specified Cargo project as WASM and load it. This is optional. If not specified, Trunk will look for a <code>Cargo.toml</code> in the parent directory of the source HTML file.</p>
 <ul>
 <li><code>href</code>: (optional) the path to the <code>Cargo.toml</code> of the Rust project. If a directory is specified, then Trunk will look for the <code>Cargo.toml</code> in the given directory. If no value is specified, then Trunk will look for a <code>Cargo.toml</code> in the parent directory of the source HTML file.</li>
-<li><code>data-bin</code>: (optional) the name of the binary to compile and use as the main WASM application. If the Cargo project has multiple binaries, this value will be required for proper functionality.</li>
-<li><code>data-wasm-opt</code>: (optional) run wasm-opt with the set optimization level. wasm-opt is <strong>turned off by default</strong> but that may change in the future. The possible values are <code>0</code>, <code>1</code>, <code>2</code>, <code>3</code>, <code>4</code>, <code>s</code>, <code>z</code> or an <em>empty value</em> for wasm-opt's default. Set this option to <code>0</code> to disable wasm-opt explicitly. The values <code>1-4</code> are increasingly stronger optimization levels for speed. <code>s</code> and <code>z</code> (z means more optimization) optimize for binary size instead.</li>
-<li><code>data-keep-debug</code>: (optional) instruct <code>wasm-bindgen</code> to preserve debug info in the final WASM output, even for <code>--release</code> mode.</li>
+<li><code>data-bin</code>: (optional) the name of the binary to compile and load. If the Cargo project has multiple binaries, this value will be required for proper functionality.</li>
+<li><code>data-type</code>: (optional) specifies how the binary should be loaded into the project. Can be set to <code>main</code> or <code>worker</code>. <code>main</code> is the default. There can only be one <code>main</code> link. For workers a javascript wrapper is created named after the binary name (if provided) or project name, which can be used to load it.</li>
+<li><code>data-cargo-features</code>: (optional) Space or comma separated list of Cargo features to activate.</li>
+<li><code>data-cargo-no-default-features</code>: (optional) Disables the default Cargo features.</li>
+<li><code>data-cargo-all-features</code>: (optional) Enables all Cargo features.
+<ul>
+<li>Neither compatible with <code>data-cargo-features</code> nor <code>data-cargo-no-default-features</code>.</li>
+</ul>
+</li>
+<li><code>data-wasm-opt</code>: (optional) run wasm-opt with the set optimization level. The possible values are <code>0</code>, <code>1</code>, <code>2</code>, <code>3</code>, <code>4</code>, <code>s</code>, <code>z</code> or an <em>empty value</em> for wasm-opt's default. Set this option to <code>0</code> to disable wasm-opt explicitly. The values <code>1-4</code> are increasingly stronger optimization levels for speed. <code>s</code> and <code>z</code> (z means more optimization) optimize for binary size instead. Only used in <code>--release</code> mode.</li>
+<li><code>data-keep-debug</code>: (optional) instruct <code>wasm-bindgen</code> to preserve debug info in the final WASM output, even for <code>--release</code> mode. This may conflict with the use of wasm-opt, so to be sure, it is recommended to set <code>data-wasm-opt=&quot;0&quot;</code> when using this option.</li>
 <li><code>data-no-demangle</code>: (optional) instruct <code>wasm-bindgen</code> to not demangle Rust symbol names.</li>
+<li><code>data-reference-types</code>: (optional) instruct <code>wasm-bindgen</code> to enable <a href="https://rustwasm.github.io/docs/wasm-bindgen/reference/reference-types.html">reference types</a>.</li>
+<li><code>data-weak-refs</code>: (optional) instruct <code>wasm-bindgen</code> to enable <a href="https://rustwasm.github.io/docs/wasm-bindgen/reference/weak-references.html">weak references</a>.</li>
+<li><code>data-typescript</code>: (optional) instruct <code>wasm-bindgen</code> to output Typescript bindings. Defaults to false.</li>
 </ul>
 <h2 id="sass-scss">sass/scss</h2>
-<p>✅ <code>rel=&quot;sass&quot;</code> or <code>rel=&quot;scss&quot;</code>: Trunk ships with a <a href="https://github.com/compass-rs/sass-rs">built-in sass/scss compiler</a>. Just link to your sass files from your source HTML, and Trunk will handle the rest. This content is hashed for cache control. The <code>href</code> attribute must be included in the link pointing to the sass/scss file to be processed.</p>
+<p>✅ <code>rel=&quot;sass&quot;</code> or <code>rel=&quot;scss&quot;</code>: Trunk uses the official <a href="https://github.com/sass/dart-sass">dart-sass</a> for compilation. Just link to your sass files from your source HTML, and Trunk will handle the rest. This content is hashed for cache control. The <code>href</code> attribute must be included in the link pointing to the sass/scss file to be processed.</p>
+<ul>
+<li><code>data-inline</code>: (optional) this attribute will inline the compiled CSS from the SASS/SCSS fille into a <code>&lt;style&gt;</code> tag instead of using a <code>&lt;link rel=&quot;stylesheet&quot;&gt;</code> tag.</li>
+</ul>
 <h2 id="css">css</h2>
 <p>✅ <code>rel=&quot;css&quot;</code>: Trunk will copy linked css files found in the source HTML without content modification. This content is hashed for cache control. The <code>href</code> attribute must be included in the link pointing to the css file to be processed.</p>
 <ul>
@@ -168,12 +198,6 @@
 <p>✅ <code>rel=&quot;copy-file&quot;</code>: Trunk will copy the file specified in the <code>href</code> attribute to the <code>dist</code> dir. This content is copied exactly, no hashing is performed.</p>
 <h2 id="copy-dir">copy-dir</h2>
 <p>✅ <code>rel=&quot;copy-dir&quot;</code>: Trunk will recursively copy the directory specified in the <code>href</code> attribute to the <code>dist</code> dir. This content is copied exactly, no hashing is performed.</p>
-<h2 id="rust-worker">rust-worker</h2>
-<p>⏳ <code>rel=&quot;rust-worker&quot;</code>: (in-progress) Trunk will compile the specified Rust project as a WASM web worker. The following attributes are required:</p>
-<ul>
-<li><code>href</code>: (optional) the path to the <code>Cargo.toml</code> of the Rust project. If a directory is specified, then Trunk will look for the <code>Cargo.toml</code> in the given directory. If no value is specified, then Trunk will look for a <code>Cargo.toml</code> in the parent directory of the source HTML file.</li>
-<li><code>data-bin</code>: (optional) the name of the binary to compile and use as the web worker. If the Cargo project has multiple binaries, this value will be required for proper functionality.</li>
-</ul>
 <p>Trunk is still a young project, and new asset types will be added as we move forward. Keep an eye on <a href="https://github.com/thedodd/trunk/issues/3">trunk#3</a> for more information on planned asset types, implementation status, and please contribute to the discussion if you think something is missing.</p>
 <h1 id="js-snippets">JS Snippets</h1>
 <p>JS snippets generated from the <a href="https://rustwasm.github.io/docs/wasm-bindgen/reference/js-snippets.html">wasm-bindgen JS snippets feature</a> are automatically copied to the dist dir, hashed and ready to rock. No additional setup is required. Just use the feature in your application, and Trunk will take care of the rest.</p>
@@ -185,6 +209,42 @@
 <p>You can instruct Trunk to write the URL passed to <code>--public-url</code> to the HTML output by adding this to your <code>&lt;head&gt;</code>: <code>&lt;base data-trunk-public-url/&gt;</code>.</p>
 <p>Trunk will set the <code>href</code> attribute of the element to the public URL. This changes the behavior of relative URLs to be relative to the public URL instead of the current location.</p>
 <p>You can also access this value at runtime using <code>document.baseURI</code> which is useful for apps that need to know the base URL on which they're hosted (e.g. for routing).</p>
+<h1 id="hooks">Hooks</h1>
+<p>If you find that you need Trunk to perform an additional build action that isn't supported directly, then Trunk's flexible hooks system can be used to launch external processes at various stages in the pipeline. Hooks can be declared exclusively in <code>Trunk.toml</code>, and consist of a <code>stage</code>, <code>command</code> and <code>command_arguments</code>:</p>
+<ul>
+<li><code>stage</code>: (required) one of <code>pre_build</code>, <code>build</code> or <code>post_build</code>. It specifies when in Trunk's build pipeline the hook is executed.</li>
+<li><code>command</code>: (required) the name or path to the desired executable.</li>
+<li><code>command_arguments</code>: (optional, defaults to none) any arguments to be passed, in the given order, to the executable.</li>
+</ul>
+<p>At the relevant point for each stage, all hooks for that stage are spawned simultaneously. After this, Trunk immediately waits for all the hooks to exit before proceeding, except in the case of the <code>build</code> stage, described further below.</p>
+<h2 id="trunk-s-build-process">Trunk's build process</h2>
+<p>This is a brief overview of Trunk's build process for the purpose of describing when hooks are executed. Please note that the exact ordering may change in the future to add new features.</p>
+<ul>
+<li>Step 1 - Read and parse the HTML file.</li>
+<li>Step 2 - Produce a plan of all assets to be built.</li>
+<li>Step 3 - Build all assets in parallel.</li>
+<li>Step 4 - Finalize and write assets to staging directory.</li>
+<li>Step 5 - Write HTML to staging directory.</li>
+<li>Step 6 - Replace <code>dist</code> directory contents with staging directory contents.</li>
+</ul>
+<p>The hook stages correspond to this as follows:</p>
+<ul>
+<li><code>pre_build</code>: takes place before step 1.</li>
+<li><code>build</code>: takes place at the same time as step 2, executing in parallel with asset builds.</li>
+<li><code>post_build</code>: takes place after step 5 and before step 6.</li>
+</ul>
+<h2 id="hook-environment-execution">Hook Environment &amp; Execution</h2>
+<p>All hooks are executed using the same <code>stdin</code> and <code>stdout</code> as trunk. The executable is expected to return an error code of <code>0</code> to indicate success. Any other code will be treated as an error and terminate the build process. Additionally, the following environment variables are provided to the process:</p>
+<ul>
+<li><code>TRUNK_PROFILE</code>: the build profile in use. Currently either <code>debug</code> or <code>release</code>.</li>
+<li><code>TRUNK_HTML_FILE</code>: the full path to the HTML file (typically <code>index.html</code> in <code>TRUNK_SOURCE_DIR</code>) used by trunk.</li>
+<li><code>TRUNK_SOURCE_DIR</code>: the full path to the source directory in use by Trunk. This is always the directory in which <code>TRUNK_HTML_FILE</code> resides.</li>
+<li><code>TRUNK_STAGING_DIR</code>: the full path of the Trunk staging directory.</li>
+<li><code>TRUNK_DIST_DIR</code>: the full path of the Trunk dist directory.</li>
+<li><code>TRUNK_PUBLIC_URL</code>: the configured public URL for Trunk.</li>
+</ul>
+<h1 id="auto-reload">Auto-Reload</h1>
+<p>As of <code>v0.14.0</code>, Trunk now ships with the ability to automatically reload your web app as the Trunk build pipeline completes.</p>
 
 
         </div>
@@ -202,6 +262,13 @@
         Ferris the crab is public domain. This Ferris can be found at
         <a href="https://rustacean.net/">rustacean.net</a>
         and in the hearts of Rust users throughout the galaxy!
+    </p>
+    <p class="subtext text-center">
+        Join us, resistance is futile
+        <a href="https://discord.gg/JEPdBujTDr"><img
+            src="https://img.shields.io/discord/793890238267260958?logo=discord&style=flat-square"
+            style="vertical-align:text-bottom;"
+            alt="Discord Chat" /></a>
     </p>
 </footer>
 

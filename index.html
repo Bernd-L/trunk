@@ -176,15 +176,7 @@
 </span><span style="color:#323232;">cargo install --locked trunk
 </span></code></pre>
 <p><small>Release binaries can be found on the <a href="https://github.com/thedodd/trunk/releases">Github releases page</a>.</small></p>
-<p>Next, we will need to install <code>wasm-bindgen-cli</code>. In the future Trunk will handle this for you.</p>
-<pre style="background-color:#ffffff;">
-<code><span style="color:#323232;">cargo install wasm-bindgen-cli
-</span></code></pre>
-<p>If using wasm-opt, we will need to install <code>wasm-opt</code> which is part of <code>binaryen</code>. On MacOS we can install it with Homebrew:</p>
-<pre style="background-color:#ffffff;">
-<code><span style="color:#323232;">brew install binaryen
-</span></code></pre>
-<p>Some linux distributions provide a <code>binaryen</code> package in their package managers but if it's not available, outdated or you're on Windows, then we can grab a <a href="https://github.com/WebAssembly/binaryen/releases">pre-compiled release</a>, extract it and put the <code>wasm-opt</code> binary in some location that's available on the PATH.</p>
+<p>Any additional tools like <code>wasm-bindgen</code> and <code>wasm-opt</code> are automatically downloaded and managed by trunk. Therefore, no further steps required 🎉.</p>
 <h2 id="app-setup">App Setup</h2>
 <p>Get setup with your favorite <code>wasm-bindgen</code> based framework. <a href="https://github.com/yewstack/yew">Yew</a> &amp; <a href="https://github.com/seed-rs/seed">Seed</a> are the most popular options today, but there are others. Trunk will work with any <code>wasm-bindgen</code> based framework. The easiest way to ensure that your application launches properly is to <a href="https://doc.rust-lang.org/cargo/guide/project-layout.html">setup your app as an executable</a> with a standard <code>main</code> function:</p>
 <pre style="background-color:#ffffff;">
@@ -192,7 +184,7 @@
     </span><span style="font-style:italic;color:#969896;">// ... your app setup code here ...
 </span><span style="color:#323232;">}
 </span></code></pre>
-<p>Trunk uses a source HTML file to drive all asset building and bundling. Trunk also ships with a <a href="https://github.com/compass-rs/sass-rs">built-in sass/scss compiler</a>, so let's get started with the following example. Copy this HTML to the root of your project's repo as <code>index.html</code>:</p>
+<p>Trunk uses a source HTML file to drive all asset building and bundling. Trunk also uses the official <a href="https://github.com/sass/dart-sass">dart-sass</a>, so let's get started with the following example. Copy this HTML to the root of your project's repo as <code>index.html</code>:</p>
 <pre style="background-color:#ffffff;">
 <code><span style="color:#323232;">&lt;</span><span style="color:#63a35c;">html</span><span style="color:#323232;">&gt;
   &lt;</span><span style="color:#63a35c;">head</span><span style="color:#323232;">&gt;
@@ -204,12 +196,16 @@
 <pre style="background-color:#ffffff;">
 <code><span style="color:#323232;">&lt;</span><span style="color:#63a35c;">html</span><span style="color:#323232;">&gt;
   &lt;</span><span style="color:#63a35c;">head</span><span style="color:#323232;">&gt;
-    &lt;</span><span style="color:#63a35c;">link </span><span style="color:#795da3;">rel</span><span style="color:#323232;">=</span><span style="color:#183691;">&quot;stylesheet&quot; </span><span style="color:#795da3;">href</span><span style="color:#323232;">=</span><span style="color:#183691;">&quot;/index.700471f89cef12e4.css&quot;</span><span style="color:#323232;">&gt;
-    &lt;</span><span style="color:#63a35c;">script </span><span style="color:#795da3;">type</span><span style="color:#323232;">=</span><span style="color:#183691;">&quot;module&quot;</span><span style="color:#323232;">&gt;
-      </span><span style="font-weight:bold;color:#a71d5d;">import </span><span style="color:#323232;">init </span><span style="font-weight:bold;color:#a71d5d;">from </span><span style="color:#183691;">&#39;/index-719b4e04e016028b.js&#39;</span><span style="color:#323232;">;
-      init(</span><span style="color:#183691;">&#39;/index-719b4e04e016028b_bg.wasm&#39;</span><span style="color:#323232;">);
-    &lt;/</span><span style="color:#63a35c;">script</span><span style="color:#323232;">&gt;
+    &lt;</span><span style="color:#63a35c;">link </span><span style="color:#795da3;">rel</span><span style="color:#323232;">=</span><span style="color:#183691;">&quot;stylesheet&quot; </span><span style="color:#795da3;">href</span><span style="color:#323232;">=</span><span style="color:#183691;">&quot;/index-c920ca43256fdcb9.css&quot;</span><span style="color:#323232;">&gt;
+    &lt;</span><span style="color:#63a35c;">link </span><span style="color:#795da3;">rel</span><span style="color:#323232;">=</span><span style="color:#183691;">&quot;preload&quot; </span><span style="color:#795da3;">href</span><span style="color:#323232;">=</span><span style="color:#183691;">&quot;/index-7eeee8fa37b7636a_bg.wasm&quot; </span><span style="color:#795da3;">as</span><span style="color:#323232;">=</span><span style="color:#183691;">&quot;fetch&quot; </span><span style="color:#795da3;">type</span><span style="color:#323232;">=</span><span style="color:#183691;">&quot;application/wasm&quot; </span><span style="color:#795da3;">crossorigin</span><span style="color:#323232;">=</span><span style="color:#183691;">&quot;&quot;</span><span style="color:#323232;">&gt;
+    &lt;</span><span style="color:#63a35c;">link </span><span style="color:#795da3;">rel</span><span style="color:#323232;">=</span><span style="color:#183691;">&quot;modulepreload&quot; </span><span style="color:#795da3;">href</span><span style="color:#323232;">=</span><span style="color:#183691;">&quot;/index-7eeee8fa37b7636a.js&quot;</span><span style="color:#323232;">&gt;
   &lt;/</span><span style="color:#63a35c;">head</span><span style="color:#323232;">&gt;
+  &lt;</span><span style="color:#63a35c;">body</span><span style="color:#323232;">&gt;
+    &lt;</span><span style="color:#63a35c;">script </span><span style="color:#795da3;">type</span><span style="color:#323232;">=</span><span style="color:#183691;">&quot;module&quot;</span><span style="color:#323232;">&gt;
+      </span><span style="font-weight:bold;color:#a71d5d;">import </span><span style="color:#323232;">init </span><span style="font-weight:bold;color:#a71d5d;">from </span><span style="color:#183691;">&#39;/index-7eeee8fa37b7636a.js&#39;</span><span style="color:#323232;">;
+      init(</span><span style="color:#183691;">&#39;/index-7eeee8fa37b7636a_bg.wasm&#39;</span><span style="color:#323232;">);
+    &lt;/</span><span style="color:#63a35c;">script</span><span style="color:#323232;">&gt;
+  &lt;/</span><span style="color:#63a35c;">body</span><span style="color:#323232;">&gt;
 &lt;/</span><span style="color:#63a35c;">html</span><span style="color:#323232;">&gt;
 </span></code></pre>
 <p>The contents of your <code>dist</code> dir are now ready to be served on the web.</p>
@@ -219,9 +215,10 @@
 <li><a href="https://trunkrs.dev/assets/">Assets</a>: learn about all of Trunk's supported asset types.</li>
 <li><a href="https://trunkrs.dev/configuration/">Configuration</a>: learn about Trunk's configuration system and how to use the Trunk proxy.</li>
 <li><a href="https://trunkrs.dev/commands/">Commands</a>: learn about Trunk's CLI commands for use in your development workflows.</li>
+<li>Join us on Discord by following this link <a href="https://discord.gg/JEPdBujTDr"><img src="https://img.shields.io/discord/793890238267260958?logo=discord&style=flat-square" style="vertical-align:text-top;" alt="Discord Chat"/></a></li>
 </ul>
 <h1 id="contributing">Contributing</h1>
-<p>Anyone and everyone is welcome to contribute! Please review the <a href="https://github.com/thedodd/trunk/blob/master/CONTRIBUTING.md">CONTRIBUTING.md</a> document for more details. The best way to get started is to find an open issue, and then start hacking on implementing it. Letting other folks know that you are working on it, and sharing progress is a great approach. Open pull requests early and often, and please use Github's draft pull request feature.</p>
+<p>Anyone and everyone is welcome to contribute! Please review the <a href="https://github.com/thedodd/trunk/blob/master/CONTRIBUTING.md">CONTRIBUTING.md</a> document for more details. The best way to get started is to find an open issue, and then start hacking on implementing it. Letting other folks know that you are working on it, and sharing progress is a great approach. Open pull requests early and often, and please use GitHub's draft pull request feature.</p>
 <h1 id="license">License</h1>
 <p>
     <span><img src="https://img.shields.io/badge/license-MIT%2FApache--2.0-blue?style=flat-square"/></span>
@@ -245,6 +242,13 @@
         Ferris the crab is public domain. This Ferris can be found at
         <a href="https://rustacean.net/">rustacean.net</a>
         and in the hearts of Rust users throughout the galaxy!
+    </p>
+    <p class="subtext text-center">
+        Join us, resistance is futile
+        <a href="https://discord.gg/JEPdBujTDr"><img
+            src="https://img.shields.io/discord/793890238267260958?logo=discord&style=flat-square"
+            style="vertical-align:text-bottom;"
+            alt="Discord Chat" /></a>
     </p>
 </footer>
 

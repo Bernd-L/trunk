@@ -114,7 +114,7 @@
 <p>I'm happy to announce the release of Trunk <code>v0.9.0</code>. There are two major items to highlight here, let's dig in.</p>
 <h2 id="websocket-proxy-for-dev-server">WebSocket Proxy for Dev Server</h2>
 <p>First, shoutout to <code>hamza1311</code> for all of their work trailblazing this feature within Trunk, and also a shoutout to <code>jbg</code> for their work on <code>tide-websockets</code>, which is what we are using to power our new WebSocket proxy system.</p>
-<p>The new WebSocket proxy is identical in strucuture to the way standard HTTP proxies are declared. On the CLI — where only one proxy can be declared – simply add the new <code>--proxy-ws</code> flag to enable WebSocket proxy mode.</p>
+<p>The new WebSocket proxy is identical in structure to the way standard HTTP proxies are declared. On the CLI — where only one proxy can be declared – simply add the new <code>--proxy-ws</code> flag to enable WebSocket proxy mode.</p>
 <p>In a <code>Trunk.toml</code> file — where multiple proxies may be declared — simply add the <code>ws = true</code> field to a proxy section to turn it into a WebSocket proxy, as such:</p>
 <pre style="background-color:#ffffff;">
 <code><span style="color:#323232;">[[proxy]]
@@ -148,6 +148,13 @@
         Ferris the crab is public domain. This Ferris can be found at
         <a href="https://rustacean.net/">rustacean.net</a>
         and in the hearts of Rust users throughout the galaxy!
+    </p>
+    <p class="subtext text-center">
+        Join us, resistance is futile
+        <a href="https://discord.gg/JEPdBujTDr"><img
+            src="https://img.shields.io/discord/793890238267260958?logo=discord&style=flat-square"
+            style="vertical-align:text-bottom;"
+            alt="Discord Chat" /></a>
     </p>
 </footer>
 
