@@ -37,7 +37,7 @@ pub struct ConfigOptsBuild {
     #[clap(long)]
     #[serde(default)]
     pub all_features: bool,
-    /// The public URL from which assets are to be served [default: /]
+    /// A comma-separated list of features to activate, must not be used with all-features [default: ""]
     #[clap(long)]
     pub features: Option<String>,
     /// Whether to include hash values in the output file names [default: true]
